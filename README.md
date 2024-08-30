@@ -15,6 +15,7 @@
         int sousin[8];//モジュール間通信の送信データ
         while(1){
             val=im920.get_data(data,&Stop_Signal,jyusin);//コントローラのデータ、遠隔非常停止の状態確認、受信データ
+            //val=im920.get_data(data,&Stop_Signal);//データの受信しない場合はこれでもいい
             im920.trans_data(sousin,4);//データを送信する。送信に使用するモジュールのノード番号指定
             if(val==1){
                 if(data[PS5::CIRCLE]){}
