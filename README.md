@@ -1,33 +1,30 @@
 ## main.cpp
 
     #include "mbed.h"
-    #include "ps5_can_lib.h"
+    #include "im920_can_lib.h"
     
     CAN can(PA_11,PA_12,1000000);
-    PS5 ps5(can,4); //第二引数はデータを受信したいコントローラとペアになってるim920slのノード番号
-    
-      
-    int main(){
-    
+    can920 im920(can,1);//受信したいコントローラ側im920のノード番号
+
+    int main()
+    {
         int val;
-        bool data[PS5::ALL_BUTTON];
-        int analog[PS5::ALL_ANALOG]; 
-        bool Stop_Signal; //緊急停止の状態を示す
-        
-        while (true) {
-            val=ps5.get_data(data,analog,&Stop_Signal);
+        int data[PS5::ALL_BUTTON];//ディジタル・アナログすべてまとめた
+        bool Stop_Signal;//遠隔非常停止の状態
+        int jyusin[8];//モジュール間通信の受信データ格納
+        int sousin[8];//モジュール間通信の送信データ
+        while(1){
+            val=im920.get_data(data,&Stop_Signal,jyusin);//コントローラのデータ、遠隔非常停止の状態確認、受信データ
+            im920.trans_data(sousin,4);//データを送信する。送信に使用するモジュールのノード番号指定
             if(val==1){
-                if(data[PS5::CIRCLE])printf("circle\r\n");
-                else printf("not circle\r\n");
-                if(analog[PS5::R2VALUE])printf("r2value:%3d\r\n",analog[PS5::R2VALUE]);
-                
-                //ここにボタンに割り当てた動作を書く
-                
+                if(data[PS5::CIRCLE]){}
+                else{}
+                if(data[PS5::LSTICKX]){}
+                else{}
+                //コントローラデータに変化があるとき入る
             }
             else if(val==-1){
-                //何もボタンが押されていないときに入ります
-                printf("no push button\r\n");
+                //コントローラが何も押されてないときに入る
             }
-            if(Stop_Signal)printf("緊急停止中\r\n");
         }
     }
