@@ -22,6 +22,19 @@ can920::can920(CAN &can,int node)
     can.write(msg_node);
 }
 
+int can920::get_data(int *button,bool *stop_emer)
+{
+    CANMessage _msg;
+
+    if(_can.read(_msg)){
+        if(_msg.id==0x10+_node){
+            for(int i=0;i<8;i++)_input[i]=(int)_msg.data[i];
+            return calculate(_input,button,stop_emer);  
+        }
+    }
+    return 0;
+}
+
 int can920::get_data(int *button,bool *stop_emer,int *data)
 {
     CANMessage _msg;
@@ -33,9 +46,9 @@ int can920::get_data(int *button,bool *stop_emer,int *data)
         }
         else if(_msg.id==0x50){
             for(int i=0;i<8;i++)data[i]=_msg.data[i];
-            // for(int j=0;j<8;j++){
-            //     printf("%d ",data[j]);
-            // }printf("\r\n");
+            for(int j=0;j<8;j++){
+                printf("%d ",data[j]);
+            }printf("\r\n");
             return 0;
         }
     }
@@ -99,7 +112,7 @@ int can920::calculate(int *msg_data,int *d,bool *stop_emer){
 }
 
 void can920::trans_data(int *data,int __node){
-    if(std::chrono::duration_cast<std::chrono::milliseconds>(_t.elapsed_time()).count()>130){//1回の送信総時間を台数分足した時間
+    if(std::chrono::duration_cast<std::chrono::milliseconds>(_t.elapsed_time()).count()>130){//1回の送信総時間を送信と受信で2回分足した時間
         CANMessage msg_trans;
         msg_trans.len=8;
         msg_trans.id=0x50+__node;
