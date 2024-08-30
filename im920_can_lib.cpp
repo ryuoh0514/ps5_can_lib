@@ -1,10 +1,11 @@
 #include "mbed.h"
-#include "ps5_can_lib.h"
+#include "im920_can_lib.h"
 
-PS5::PS5(CAN &can,int node)
+can920::can920(CAN &can,int node)
     : _can(can)
 {
     // _can.frequency(1000000);
+    _t.start();
     _can.mode(CAN::Normal);
     _node=node;  
     _origin[0]=0;
@@ -21,21 +22,27 @@ PS5::PS5(CAN &can,int node)
     can.write(msg_node);
 }
 
-int PS5::get_data(bool *d,int *a,bool *stop_emer)
+int can920::get_data(int *button,bool *stop_emer,int *data)
 {
     CANMessage _msg;
 
     if(_can.read(_msg)){
         if(_msg.id==0x10+_node){
-            // printf("node in!!!\r\n");
             for(int i=0;i<8;i++)_input[i]=(int)_msg.data[i];
-            return calculate(_input,d,a,stop_emer);  
+            return calculate(_input,button,stop_emer);  
+        }
+        else if(_msg.id==0x50){
+            for(int i=0;i<8;i++)data[i]=_msg.data[i];
+            // for(int j=0;j<8;j++){
+            //     printf("%d ",data[j]);
+            // }printf("\r\n");
+            return 0;
         }
     }
     return 0;
 }
 
-int PS5::calculate(int *msg_data,bool *d,int *a,bool *stop_emer){
+int can920::calculate(int *msg_data,int *d,bool *stop_emer){
     CANMessage _msg_stop;
     _msg_stop.id=0x01;
     _msg_stop.len=1;
@@ -53,7 +60,7 @@ int PS5::calculate(int *msg_data,bool *d,int *a,bool *stop_emer){
         _r2=(msg_data[6]&0x80)>>7|(msg_data[7]&0x3F)<<1;
         
         d[RIGHT]    =msg_data[0]==0b0001?true:false;
-        d[PS5::DOWN]=msg_data[0]==0b0010?true:false;
+        d[DOWN]     =msg_data[0]==0b0010?true:false;
         d[UP]       =msg_data[0]==0b0011?true:false;
         d[LEFT]     =msg_data[0]==0b0100?true:false;
         d[UPRIGHT]  =msg_data[0]==0b0101?true:false;
@@ -74,26 +81,30 @@ int PS5::calculate(int *msg_data,bool *d,int *a,bool *stop_emer){
         d[TOUCHPAD] =msg_data[1]&0b10000000?true:false;
         d[L2]       =_l2?true:false;
         d[R2]       =_r2?true:false;
-
-        a[L2VALUE]=_l2;
-        a[R2VALUE]=_r2;
-        a[LSTICKX]=msg_data[2]-128;
-        a[LSTICKY]=msg_data[3]-128;
-        a[RSTICKX]=msg_data[4]-128;
-        a[RSTICKY]=msg_data[5]-128;
+        d[L2VALUE]  =_l2;
+        d[R2VALUE]  =_r2;
+        d[LSTICKX]  =msg_data[2]-128;
+        d[LSTICKY]  =msg_data[3]-128;
+        d[RSTICKX]  =msg_data[4]-128;
+        d[RSTICKY]  =msg_data[5]-128;
 
         int j=0;
         msg_data[7]=(msg_data[7]<<2)&0xFF;
-        printf("msg_data[7]:%d  ",msg_data[7]);
-        for(int i=0;i<8;i++){
-            // printf("%3x",msg_data[i]);
-            if(_origin[i]==msg_data[i])j++;
-        }
-        // printf("\r\n");
-
+        for(int i=0;i<8;i++)if(_origin[i]==msg_data[i])j++;
         if(j==8)return -1;
         else return 1;
     }else{
         return 0;
+    }
+}
+
+void can920::trans_data(int *data,int __node){
+    if(std::chrono::duration_cast<std::chrono::milliseconds>(_t.elapsed_time()).count()>130){//1回の送信総時間を台数分足した時間
+        CANMessage msg_trans;
+        msg_trans.len=8;
+        msg_trans.id=0x50+__node;
+        for(int i=0;i<8;i++)msg_trans.data[i]=data[i];
+        _can.write(msg_trans);
+        _t.reset();
     }
 }
