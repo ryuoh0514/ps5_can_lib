@@ -10,7 +10,7 @@
     {
         int val;
         int data[PS5::ALL_BUTTON];//ディジタル・アナログすべてまとめた
-        bool Stop_Signal;//遠隔非常停止の状態
+        bool Stop_Signal;//遠隔非常停止の状態 true=停止 false=解除
         int jyusin[8];//モジュール間通信の受信データ格納
         int sousin[8];//モジュール間通信の送信データ
         while(1){
