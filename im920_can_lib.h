@@ -42,7 +42,9 @@ public:
 
     can920(CAN &can,int node);
     
+    int get_data(int*,bool*);
     int get_data(int*,bool*,int*);
+    
     void trans_data(int*,int);
     
 
