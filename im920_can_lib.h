@@ -46,13 +46,14 @@ public:
     int get_data(int*,bool*,int*);
     
     void trans_data(int*,int);
-    
+    void setup(int);
 
 private:
     CAN &_can;
     Timer _t;
     int calculate(int*,int*,bool*);
-
+    
+    
     int _input[8];
     int _data[8];
     int _pdata[8];
@@ -60,6 +61,7 @@ private:
     int _node_input;
     int _val;
     int _origin[8];
+    int dead_band2;
 
 };
 
