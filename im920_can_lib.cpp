@@ -49,7 +49,6 @@ int can920::get_data(int *button,bool *stop_emer,int *data)
             for(int j=0;j<8;j++){
                 printf("%d ",data[j]);
             }printf("\r\n");
-            return 0;
         }
     }
     return 0;
@@ -60,6 +59,17 @@ int can920::calculate(int *msg_data,int *d,bool *stop_emer){
     _msg_stop.id=0x01;
     _msg_stop.len=1;
     int sdec=0;
+
+    //デッドゾーンの処理//
+    for(int i=2;i<6;i++)msg_data[i]-=128;
+    if(msg_data[2]*msg_data[2]+msg_data[3]*msg_data[3]<dead_band2){
+        msg_data[2]=0;
+        msg_data[3]=0;
+    }
+    if(msg_data[4]*msg_data[4]+msg_data[5]*msg_data[5]<dead_band2){
+        msg_data[4]=0;
+        msg_data[5]=0;
+    }
     for(int i=0;i<8;i++){
       if(_pdata[i]!=msg_data[i])sdec++;
       _pdata[i]=msg_data[i];
@@ -96,10 +106,10 @@ int can920::calculate(int *msg_data,int *d,bool *stop_emer){
         d[R2]       =_r2?true:false;
         d[L2VALUE]  =_l2;
         d[R2VALUE]  =_r2;
-        d[LSTICKX]  =msg_data[2]-128;
-        d[LSTICKY]  =msg_data[3]-128;
-        d[RSTICKX]  =msg_data[4]-128;
-        d[RSTICKY]  =msg_data[5]-128;
+        d[LSTICKX]  =msg_data[2];
+        d[LSTICKY]  =msg_data[3];
+        d[RSTICKX]  =msg_data[4];
+        d[RSTICKY]  =msg_data[5];
 
         int j=0;
         msg_data[7]=(msg_data[7]<<2)&0xFF;
@@ -114,10 +124,14 @@ int can920::calculate(int *msg_data,int *d,bool *stop_emer){
 void can920::trans_data(int *data,int __node){
     if(std::chrono::duration_cast<std::chrono::milliseconds>(_t.elapsed_time()).count()>130){//1回の送信総時間を送信と受信で2回分足した時間
         CANMessage msg_trans;
-        msg_trans.len=8;
+        msg_trans.len=8;//=sizeof(data)
         msg_trans.id=0x50+__node;
         for(int i=0;i<8;i++)msg_trans.data[i]=data[i];
         _can.write(msg_trans);
         _t.reset();
     }
+}
+
+void can920::setup(int dead_band){
+    dead_band2=dead_band*dead_band;
 }
