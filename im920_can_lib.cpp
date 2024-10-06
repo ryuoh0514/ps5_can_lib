@@ -10,10 +10,10 @@ can920::can920(CAN &can,int node)
     _node=node;  
     _origin[0]=0;
     _origin[1]=0;
-    _origin[2]=128;
-    _origin[3]=128;
-    _origin[4]=128;
-    _origin[5]=128;
+    _origin[2]=0;
+    _origin[3]=0;
+    _origin[4]=0;
+    _origin[5]=0;
     _origin[6]=0;
     _origin[7]=0;
     CANMessage msg_node;
