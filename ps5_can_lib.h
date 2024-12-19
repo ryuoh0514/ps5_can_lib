@@ -1,56 +1,61 @@
-#ifndef _PS5_CAN_LIB_H_
-#define _PS5_CAN_LIB_H_
+#ifndef _IM920_CAN_LIB_H_
+#define _IM920_CAN_LIB_H_
 
 #include "mbed.h"
 
-class PS5
+enum PS5{
+    RIGHT,
+    DOWN,
+    UP,
+    LEFT,
+    UPRIGHT,
+    DOWNRIGHT,
+    UPLEFT,
+    DOWNLEFT,
+    SQUARE,
+    CROSS,
+    CIRCLE,
+    TRIANGLE,
+    L1,
+    R1,
+    SHARE,
+    OPTIONS,
+    L3,
+    R3,
+    PSBUTTON,
+    TOUCHPAD,
+    L2,
+    R2,
+    L2VALUE,
+    R2VALUE,
+    LSTICKX,
+    LSTICKY,
+    RSTICKX,
+    RSTICKY,
+    ALL_BUTTON
+};
+
+class can920
 {
 public:
-    enum{
-        RIGHT,
-        DOWN,
-        UP,
-        LEFT,
-        UPRIGHT,
-        DOWNRIGHT,
-        UPLEFT,
-        DOWNLEFT,
-        SQUARE,
-        CROSS,
-        CIRCLE,
-        TRIANGLE,
-        L1,
-        R1,
-        SHARE,
-        OPTIONS,
-        L3,
-        R3,
-        PSBUTTON,
-        TOUCHPAD,
-        L2,
-        R2,
-        ALL_BUTTON
-    };
-    enum{
-        L2VALUE,
-        R2VALUE,
-        LSTICKX,
-        LSTICKY,
-        RSTICKX,
-        RSTICKY,
-        ALL_ANALOG
-    };
+    
 
-    PS5(CAN &can,int node);
+    can920(CAN &can,int node);
     
-    int get_data(bool*,int*,bool*);
+    int get_data(int*,bool*);
+    int get_data(int*,bool*,int*);
     
+    void trans_data(int*,int);
+    void setup(int);
 
 private:
-
     CAN &_can;
-    int calculate(int*,bool*,int*,bool*);
-
+    Timer _t,_id;
+    // Timeout timeout;
+    int calculate(int*,int*,bool*);
+    void id_send();
+    
+    
     int _input[8];
     int _data[8];
     int _pdata[8];
@@ -58,6 +63,9 @@ private:
     int _node_input;
     int _val;
     int _origin[8];
+    int dead_band2;
+
+    CANMessage msg_node,_msg,_msg_stop;
 
 };
 
