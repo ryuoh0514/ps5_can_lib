@@ -1,33 +1,35 @@
 ## main.cpp
 
     #include "mbed.h"
-    #include "ps5_can_lib.h"
+    #include "im920_can_lib.h"
     
     CAN can(PA_11,PA_12,1000000);
-    PS5 ps5(can,4); //第二引数はデータを受信したいコントローラとペアになってるim920slのノード番号
+    can920 ps5(can,2);
     
-      
-    int main(){
-    
+    // main() runs in its own thread in the OS
+    int main()
+    {
         int val;
-        bool data[PS5::ALL_BUTTON];
-        int analog[PS5::ALL_ANALOG]; 
-        bool Stop_Signal; //緊急停止の状態を示す
-        
-        while (true) {
-            val=ps5.get_data(data,analog,&Stop_Signal);
+        int data[PS5::ALL_BUTTON];
+        bool Stop_Signal;
+        int jyusin[8];
+        int sousin[8];
+        for(int j=0;j<8;j++){
+            sousin[j]=j*17;
+        }
+        ps5.setup(30);
+        while(1){
+            val=ps5.get_data(data,&Stop_Signal,jyusin);
+            // val=ps5.get_data(data,&Stop_Signal);
+            ps5.trans_data(sousin,2);
+    
             if(val==1){
-                if(data[PS5::CIRCLE])printf("circle\r\n");
-                else printf("not circle\r\n");
-                if(analog[PS5::R2VALUE])printf("r2value:%3d\r\n",analog[PS5::R2VALUE]);
-                
-                //ここにボタンに割り当てた動作を書く
-                
+                // printf("button\r\n");
+                if(data[PS5::LSTICKX])printf("%3d\r\n",data[PS5::LSTICKX]);
+                if(data[PS5::RSTICKX])printf("%3d\r\n",data[PS5::RSTICKX]);
             }
             else if(val==-1){
-                //何もボタンが押されていないときに入ります
-                printf("no push button\r\n");
+                printf("nothing\r\n");
             }
-            if(Stop_Signal)printf("緊急停止中\r\n");
         }
     }
